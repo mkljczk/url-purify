@@ -154,83 +154,11 @@ function loadOldDataFromStore() {
 }
 
 /**
- * Increase by {number} the total counter
- * @param  {int} number
- */
-function increaseTotalCounter(number) {
-    if (storage.statisticsStatus) {
-        storage.totalCounter += number;
-        deferSaveOnDisk('totalCounter');
-    }
-}
-
-/**
- * Increase by one the cleaned counter
- */
-function increaseCleanedCounter() {
-    if (storage.statisticsStatus) {
-        storage.cleanedCounter++;
-        deferSaveOnDisk('cleanedCounter');
-    }
-}
-
-/**
- * Change the icon.
- */
-function changeIcon() {
-    checkOSAndroid().then((res) => {
-        if (!res) {
-            if (storage.globalStatus) {
-                browser.browserAction.setIcon({path: "img/clearurls_128x128.png"}).catch(handleError);
-            } else {
-                browser.browserAction.setIcon({path: "img/clearurls_gray_128x128.png"}).catch(handleError);
-            }
-        }
-    });
-}
-
-/**
- * Get the badged status from the browser storage and put the value
- * into a local variable.
- *
- */
-function setBadgedStatus() {
-    checkOSAndroid().then((res) => {
-        if (!res && storage.badgedStatus) {
-            let color = storage.badged_color;
-            if (storage.badged_color.charAt(0) !== '#')
-                color = '#' + storage.badged_color;
-            browser.browserAction.setBadgeBackgroundColor({
-                'color': color
-            }).catch(handleError);
-
-            // Works only in Firefox: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/browserAction/setBadgeTextColor#Browser_compatibility
-            if (getBrowser() === "Firefox") {
-                browser.browserAction.setBadgeTextColor({
-                    color: "#FFFFFF"
-                }).catch(handleError);
-            }
-        }
-    });
-}
-
-/**
  * Returns the current URL.
  * @return {String} [description]
  */
 function getCurrentURL() {
     return currentURL;
-}
-
-/**
- * Check for browser.
- */
-function getBrowser() {
-    if (typeof InstallTrigger !== 'undefined') {
-        return "Firefox";
-    } else {
-        return "Chrome";
-    }
 }
 
 /**
@@ -278,34 +206,6 @@ function handleError(error) {
 }
 
 /**
- * Function to log all activities from ClearUrls.
- * Only logging when activated.
- *
- * @param beforeProcessing  the url before the clear process
- * @param afterProcessing   the url after the clear process
- * @param rule              the rule that triggered the process
- */
-function pushToLog(beforeProcessing, afterProcessing, rule) {
-    const limit = Math.max(0, storage.logLimit);
-    if (storage.loggingStatus && limit !== 0 && !isNaN(limit)) {
-        while (storage.log.log.length >= limit
-        || storage.log.log.length >= logThreshold) {
-            storage.log.log.shift();
-        }
-
-        storage.log.log.push(
-            {
-                "before": beforeProcessing,
-                "after": afterProcessing,
-                "rule": rule,
-                "timestamp": Date.now()
-            }
-        );
-        deferSaveOnDisk('log');
-    }
-}
-
-/**
  * Checks if the storage is available.
  */
 function isStorageAvailable() {
@@ -331,7 +231,7 @@ async function sha256(message) {
 
 /**
  * Generates a non-secure random ASCII string of length {@code len}.
- * 
+ *
  * @returns non-secure random ASCII
  */
 function randomASCII(len) {

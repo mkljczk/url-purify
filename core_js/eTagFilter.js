@@ -42,8 +42,6 @@ function eTagFilter(requestDetails) {
         // insert dummy etag
         requestDetails.responseHeaders[i].value = generateDummyEtag(len, quotes, w);
 
-        pushToLog(requestDetails.url, requestDetails.url, translate("eTag_filtering_log"));
-
         break;
     }
 
@@ -52,7 +50,7 @@ function eTagFilter(requestDetails) {
 
 /**
  * Generates a random ETag.
- * 
+ *
  * Must be ASCII characters placed between double quotes.
  * See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag
  */
@@ -66,7 +64,7 @@ function generateDummyEtag(len, quotes = true, w = false) {
 }
 
 /**
- * Since Firefox 85, eTags can no longer be 
+ * Since Firefox 85, eTags can no longer be
  * used for tracking users over multiple sites.
  */
 if(getBrowser() !== "Firefox") {

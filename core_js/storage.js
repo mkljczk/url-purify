@@ -163,23 +163,6 @@ function setData(key, value) {
         case "types":
             storage[key] = value.split(',');
             break;
-        case "logLimit":
-            storage[key] = Math.max(0, Number(value));
-            break;
-        case "globalurlcounter":
-            // migrate from old key
-            storage["totalCounter"] = value;
-            delete storage[key];
-            deleteFromDisk(key);
-            saveOnExit();
-            break;
-        case "globalCounter":
-            // migrate from old key
-            storage["cleanedCounter"] = value;
-            delete storage[key];
-            deleteFromDisk(key);
-            saveOnExit();
-            break;
         default:
             storage[key] = value;
     }
@@ -207,8 +190,6 @@ function initSettings() {
     storage.dataHash = "";
     storage.badgedStatus = true;
     storage.globalStatus = true;
-    storage.totalCounter = 0;
-    storage.cleanedCounter = 0;
     storage.hashStatus = "error";
     storage.loggingStatus = false;
     storage.log = {"log": []};

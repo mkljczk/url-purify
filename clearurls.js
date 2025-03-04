@@ -33,11 +33,10 @@ var os;
  *
  * @param  {Provider} provider      Provider-Object
  * @param pureUrl                   URL as String
- * @param {boolean} quiet           if the action should be displayed in log and statistics
  * @param {requestDetails} request  the request details
  * @return {Array}                  Array with changes and url fields
  */
-function removeFieldsFormURL(provider, pureUrl, quiet = false, request = null) {
+function removeFieldsFormURL(provider, pureUrl, request = null) {
     let url = pureUrl;
     let domain = "";
     let fragments = "";
@@ -63,12 +62,6 @@ function removeFieldsFormURL(provider, pureUrl, quiet = false, request = null) {
     if (re !== null) {
         url = decodeURL(re);
 
-        //Log the action
-        if (!quiet) {
-            pushToLog(pureUrl, url, translate('log_redirect'));
-            increaseTotalCounter(1);
-            increaseBadged(false, request)
-        }
 
         return {
             "redirect": true,
@@ -77,9 +70,6 @@ function removeFieldsFormURL(provider, pureUrl, quiet = false, request = null) {
     }
 
     if (provider.isCaneling() && storage.domainBlocking) {
-        if (!quiet) pushToLog(pureUrl, pureUrl, translate('log_domain_blocked'));
-        increaseTotalCounter(1);
-        increaseBadged(quiet, request);
         return {
             "cancel": true,
             "url": url
@@ -94,12 +84,6 @@ function removeFieldsFormURL(provider, pureUrl, quiet = false, request = null) {
         url = url.replace(new RegExp(rawRule, "gi"), "");
 
         if (beforeReplace !== url) {
-            //Log the action
-            if (storage.loggingStatus && !quiet) {
-                pushToLog(beforeReplace, url, rawRule);
-            }
-
-            increaseBadged(quiet, request);
             changes = true;
         }
     });
@@ -132,21 +116,6 @@ function removeFieldsFormURL(provider, pureUrl, quiet = false, request = null) {
                     changes = true;
                     localChange = true;
                 }
-            }
-
-            //Log the action
-            if (localChange && storage.loggingStatus) {
-                let tempURL = domain;
-                let tempBeforeURL = domain;
-
-                if (fields.toString() !== "") tempURL += "?" + fields.toString();
-                if (fragments.toString() !== "") tempURL += "#" + fragments.toString();
-                if (beforeFields.toString() !== "") tempBeforeURL += "?" + beforeFields.toString();
-                if (beforeFragments.toString() !== "") tempBeforeURL += "#" + beforeFragments.toString();
-
-                if (!quiet) pushToLog(tempBeforeURL, tempURL, rule);
-
-                increaseBadged(quiet, request);
             }
         });
 
@@ -608,9 +577,6 @@ function start() {
     function clearUrl(request) {
         const URLbeforeReplaceCount = countFields(request.url);
 
-        //Add Fields form Request to global url counter
-        increaseTotalCounter(URLbeforeReplaceCount);
-
         if (storage.globalStatus) {
             let result = {
                 "changes": false,
@@ -620,9 +586,6 @@ function start() {
             };
 
             if (storage.pingBlocking && storage.pingRequestTypes.includes(request.type)) {
-                pushToLog(request.url, request.url, translate('log_ping_blocked'));
-                increaseBadged(false, request);
-                increaseTotalCounter(1);
                 return {cancel: true};
             }
 
