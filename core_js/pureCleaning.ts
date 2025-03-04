@@ -24,7 +24,7 @@
  * @param  {String} url     url as string
  * @return {String}         cleaned URL
  */
-function pureCleaning(url) {
+const pureCleaning = (url: string) => {
     let before = url;
     let after = url;
 
@@ -39,10 +39,8 @@ function pureCleaning(url) {
 /**
  * Internal function to clean the given URL.
  */
-function _cleaning(url) {
+const _cleaning = (url: string) => {
     let cleanURL = url;
-    const URLbeforeReplaceCount = countFields(url);
-
 
     for (let i = 0; i < providers.length; i++) {
         let result = {
