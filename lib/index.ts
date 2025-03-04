@@ -16,47 +16,48 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import {
+  decodeURL,
+  extractFragments,
+  urlSearchParamsToString,
+  urlWithoutParamsAndHash,
+} from "./tools";
+
 /*jshint esversion: 6 */
 /*
  * This script is responsible for the core functionalities.
  */
-var providers = [];
-var prvKeys = [];
+var providers: Array<Provider> = [];
+var prvKeys: Array<string> = [];
 var siteBlockedAlert = "javascript:void(0)";
-var dataHash;
-var localDataHash;
-var os;
+var dataHash: string;
+var localDataHash: string;
 
 /**
  * Helper function which remove the tracking fields
  * for each provider given as parameter.
  *
- * @param  {Provider} provider      Provider-Object
+ * @param provider      Provider-Object
  * @param pureUrl                   URL as String
- * @param {requestDetails} request  the request details
- * @return {Array}                  Array with changes and url fields
+ * @return Array with changes and url fields
  */
 const removeFieldsFormURL = (
   provider: Provider,
   pureUrl: string,
-  request = null,
-) => {
+): {
+  url?: string;
+  cancel?: boolean;
+  changes?: boolean;
+  redirect?: boolean;
+} => {
   let url = pureUrl;
   let domain = "";
-  let fragments = "";
-  let fields = "";
+  let fragments: URLSearchParams;
+  let fields: URLSearchParams;
   let rules = provider.getRules();
   let changes = false;
   let rawRules = provider.getRawRules();
   let urlObject = new URL(url);
-
-  if (storage.localHostsSkipping && checkLocalURL(urlObject)) {
-    return {
-      changes: false,
-      url: url,
-      cancel: false,
-    };
-  }
 
   /*
    * Expand the url by provider redirections. So no tracking on
@@ -101,15 +102,10 @@ const removeFieldsFormURL = (
    */
   if (fields.toString() !== "" || fragments.toString() !== "") {
     rules.forEach((rule) => {
-      const beforeFields = fields.toString();
-      const beforeFragments = fragments.toString();
-      let localChange = false;
-
       for (const field of fields.keys()) {
         if (new RegExp("^" + rule + "$", "gi").test(field)) {
           fields.delete(field);
           changes = true;
-          localChange = true;
         }
       }
 
@@ -117,7 +113,6 @@ const removeFieldsFormURL = (
         if (new RegExp("^" + rule + "$", "gi").test(fragment)) {
           fragments.delete(fragment);
           changes = true;
-          localChange = true;
         }
       }
     });
@@ -138,6 +133,287 @@ const removeFieldsFormURL = (
     url: url,
   };
 };
+
+/*
+ * ##################################################################
+ * # Supertyp Provider                                              #
+ * ##################################################################
+ */
+class Provider {
+  name: string;
+  urlPattern: RegExp;
+  enabled_rules = {};
+  disabled_rules = {};
+  enabled_exceptions = {};
+  disabled_exceptions = {};
+  completeProvider: boolean;
+  canceling: boolean;
+  forceRedirection: boolean;
+  enabled_redirections = {};
+  disabled_redirections = {};
+  active: boolean;
+  enabled_rawRules = {};
+  disabled_rawRules = {};
+  enabled_referralMarketing = {};
+  disabled_referralMarketing = {};
+  methods: Array<string> = [];
+
+  /**
+   * Declare constructor
+   *
+   * @param name             Provider name
+   * @param completeProvider Set URL Pattern as rule
+   * @param forceRedirection Whether redirects should be enforced via a "tabs.update"
+   * @param isActive         Is the provider active?
+   */
+  constructor(
+    name: string,
+    completeProvider = false,
+    forceRedirection = false,
+    isActive = true,
+  ) {
+    this.name = name;
+    this.completeProvider = completeProvider;
+    this.canceling = completeProvider;
+    this.forceRedirection = forceRedirection;
+    this.active = isActive;
+
+    if (completeProvider) this.enabled_rules[".*"] = true;
+  }
+
+  /**
+   * Returns whether redirects should be enforced via a "tabs.update"
+   */
+  shouldForceRedirect = () => this.forceRedirection;
+
+  /**
+   * Returns the provider name.
+   */
+  getName = () => this.name;
+
+  /**
+   * Add URL pattern.
+   */
+  setURLPattern = (urlPatterns: RegExp | string) => {
+    this.urlPattern = new RegExp(urlPatterns, "i");
+  };
+
+  /**
+   * Return if the Provider Request is canceled
+   */
+  isCaneling = () => this.canceling;
+
+  /**
+   * Check the url is matching the ProviderURL.
+   */
+  matchURL = (url: string) =>
+    this.urlPattern.test(url) && !this.matchException(url);
+
+  /**
+   * Apply a rule to a given tuple of rule array.
+   * @param enabledRuleArray   for enabled rules
+   * @param disabledRulesArray for disabled rules
+   * @param rule               RegExp as string
+   * @param isActive           Is this rule active?
+   */
+  applyRule = (
+    enabledRuleArray,
+    disabledRulesArray,
+    rule: string,
+    isActive = true,
+  ) => {
+    if (isActive) {
+      enabledRuleArray[rule] = true;
+
+      if (disabledRulesArray[rule] !== undefined) {
+        delete disabledRulesArray[rule];
+      }
+    } else {
+      disabledRulesArray[rule] = true;
+
+      if (enabledRuleArray[rule] !== undefined) {
+        delete enabledRuleArray[rule];
+      }
+    }
+  };
+
+  /**
+   * Add a rule to the rule array
+   * and replace old rule with new rule.
+   *
+   * @param rule     as string
+   * @param isActive this rule active?
+   */
+  addRule = (rule: string, isActive = true) => {
+    this.applyRule(this.enabled_rules, this.disabled_rules, rule, isActive);
+  };
+
+  /**
+   * Return all active rules as an array.
+   *
+   * @return Array RegExp strings
+   */
+  getRules = () => {
+    if (!storage.referralMarketing) {
+      return Object.keys(
+        Object.assign(this.enabled_rules, this.enabled_referralMarketing),
+      );
+    }
+
+    return Object.keys(this.enabled_rules);
+  };
+
+  /**
+   * Add a raw rule to the raw rule array
+   * and replace old raw rule with new raw rule.
+   *
+   * @param rule     as string
+   * @param isActive this rule active?
+   */
+  addRawRule = (rule: string, isActive = true) => {
+    this.applyRule(
+      this.enabled_rawRules,
+      this.disabled_rawRules,
+      rule,
+      isActive,
+    );
+  };
+
+  /**
+   * Return all active raw rules as an array.
+   *
+   * @return Array RegExp strings
+   */
+  getRawRules = () => Object.keys(this.enabled_rawRules);
+
+  /**
+   * Add a referral marketing rule to the referral marketing array
+   * and replace old referral marketing rule with new referral marketing rule.
+   *
+   * @param rule     as string
+   * @param isActive this rule active?
+   */
+  addReferralMarketing = (rule: string, isActive = true) => {
+    this.applyRule(
+      this.enabled_referralMarketing,
+      this.disabled_referralMarketing,
+      rule,
+      isActive,
+    );
+  };
+
+  /**
+   * Add a exception to the exceptions array
+   * and replace old with new exception.
+   *
+   * @param exception as string
+   * @param isActive  Is this exception active?
+   */
+  addException = (exception: string, isActive = true) => {
+    if (isActive) {
+      this.enabled_exceptions[exception] = true;
+
+      if (this.disabled_exceptions[exception] !== undefined) {
+        delete this.disabled_exceptions[exception];
+      }
+    } else {
+      this.disabled_exceptions[exception] = true;
+
+      if (this.enabled_exceptions[exception] !== undefined) {
+        delete this.enabled_exceptions[exception];
+      }
+    }
+  };
+
+  /**
+   * Add a HTTP method to methods list.
+   *
+   * @param method HTTP Method Name
+   */
+  addMethod = (method: string) => {
+    if (!this.methods.includes(method)) {
+      this.methods.push(method);
+    }
+  };
+
+  /**
+   * Check the requests' method.
+   *
+   * @param {requestDetails} details Requests details
+   * @returns {boolean} should be filtered or not
+   */
+  matchMethod = (details) => {
+    if (!this.methods.length) return true;
+    return this.methods.includes(details["method"]);
+  };
+
+  /**
+   * Private helper method to check if the url
+   * an exception.
+   *
+   * @param url as string
+   * @return matching?
+   */
+  matchException = (url: string) => {
+    let result = false;
+
+    //Add the site blocked alert to every exception
+    if (url === siteBlockedAlert) return true;
+
+    for (const exception in this.enabled_exceptions) {
+      if (result) break;
+
+      let exception_regex = new RegExp(exception, "i");
+      result = exception_regex.test(url);
+    }
+
+    return result;
+  };
+
+  /**
+   * Add a redirection to the redirections array
+   * and replace old with new redirection.
+   *
+   * @param redirection RegExp as string
+   * @param isActive    Is this redirection active?
+   */
+  addRedirection = function (redirection: string, isActive = true) {
+    if (isActive) {
+      this.enabled_redirections[redirection] = true;
+
+      if (this.disabled_redirections[redirection] !== undefined) {
+        delete this.disabled_redirections[redirection];
+      }
+    } else {
+      this.disabled_redirections[redirection] = true;
+
+      if (this.enabled_redirections[redirection] !== undefined) {
+        delete this.enabled_redirections[redirection];
+      }
+    }
+  };
+
+  /**
+   * Return all redirection.
+   *
+   * @return url
+   */
+  getRedirection = (url: string) => {
+    let re: string | null = null;
+
+    for (const redirection in this.enabled_redirections) {
+      let result = url.match(new RegExp(redirection, "i"));
+
+      if (result && result.length > 0 && redirection) {
+        re = new RegExp(redirection, "i").exec(url)[1];
+
+        break;
+      }
+    }
+
+    return re;
+  };
+}
 
 const start = () => {
   /**
@@ -162,7 +438,7 @@ const start = () => {
         new Provider(
           prvKeys[p],
           data.providers[prvKeys[p]].getOrDefault("completeProvider", false),
-          data.providers[prvKeys[p]].getOrDefault("forceRedirection", false),
+          data.providers[prvKeys[p]].forceRedirection,
         ),
       );
 
@@ -242,7 +518,6 @@ const start = () => {
     if (storage.ClearURLsData.length === 0) {
       storage.globalStatus = false;
       storage.dataHash = "";
-      changeIcon();
       storeHashStatus(5);
       saveOnExit();
     }
@@ -336,282 +611,7 @@ const start = () => {
       });
   };
 
-  // ##################################################################
-
-  /*
-   * ##################################################################
-   * # Supertyp Provider                                              #
-   * ##################################################################
-   */
-  /**
-   * Declare constructor
-   *
-   * @param {String} _name                 Provider name
-   * @param {boolean} _completeProvider    Set URL Pattern as rule
-   * @param {boolean} _forceRedirection    Whether redirects should be enforced via a "tabs.update"
-   * @param {boolean} _isActive            Is the provider active?
-   */
-  function Provider(
-    _name: string,
-    _completeProvider = false,
-    _forceRedirection = false,
-    _isActive = true,
-  ) {
-    let name = _name;
-    let urlPattern: RegExp;
-    let enabled_rules = {};
-    let disabled_rules = {};
-    let enabled_exceptions = {};
-    let disabled_exceptions = {};
-    let canceling = _completeProvider;
-    let enabled_redirections = {};
-    let disabled_redirections = {};
-    let active = _isActive;
-    let enabled_rawRules = {};
-    let disabled_rawRules = {};
-    let enabled_referralMarketing = {};
-    let disabled_referralMarketing = {};
-    let methods: Array<string> = [];
-
-    if (_completeProvider) {
-      enabled_rules[".*"] = true;
-    }
-
-    /**
-     * Returns whether redirects should be enforced via a "tabs.update"
-     * @return {boolean}    whether redirects should be enforced
-     */
-    this.shouldForceRedirect = () => _forceRedirection;
-
-    /**
-     * Returns the provider name.
-     * @return {String}
-     */
-    this.getName = () => name;
-
-    /**
-     * Add URL pattern.
-     *
-     * @require urlPatterns as RegExp
-     */
-    this.setURLPattern = (urlPatterns) => {
-      urlPattern = new RegExp(urlPatterns, "i");
-    };
-
-    /**
-     * Return if the Provider Request is canceled
-     * @return {Boolean} isCanceled
-     */
-    this.isCaneling = () => canceling;
-
-    /**
-     * Check the url is matching the ProviderURL.
-     *
-     * @return {boolean}    ProviderURL as RegExp
-     */
-    this.matchURL = (url: string) =>
-      urlPattern.test(url) && !this.matchException(url);
-
-    /**
-     * Apply a rule to a given tuple of rule array.
-     * @param enabledRuleArray      array for enabled rules
-     * @param disabledRulesArray    array for disabled rules
-     * @param {String} rule         RegExp as string
-     * @param {boolean} isActive    Is this rule active?
-     */
-    this.applyRule = (
-      enabledRuleArray,
-      disabledRulesArray,
-      rule,
-      isActive = true,
-    ) => {
-      if (isActive) {
-        enabledRuleArray[rule] = true;
-
-        if (disabledRulesArray[rule] !== undefined) {
-          delete disabledRulesArray[rule];
-        }
-      } else {
-        disabledRulesArray[rule] = true;
-
-        if (enabledRuleArray[rule] !== undefined) {
-          delete enabledRuleArray[rule];
-        }
-      }
-    };
-
-    /**
-     * Add a rule to the rule array
-     * and replace old rule with new rule.
-     *
-     * @param {String} rule        RegExp as string
-     * @param {boolean} isActive   Is this rule active?
-     */
-    this.addRule = (rule: string, isActive = true) => {
-      this.applyRule(enabled_rules, disabled_rules, rule, isActive);
-    };
-
-    /**
-     * Return all active rules as an array.
-     *
-     * @return Array RegExp strings
-     */
-    this.getRules = () => {
-      if (!storage.referralMarketing) {
-        return Object.keys(
-          Object.assign(enabled_rules, enabled_referralMarketing),
-        );
-      }
-
-      return Object.keys(enabled_rules);
-    };
-
-    /**
-     * Add a raw rule to the raw rule array
-     * and replace old raw rule with new raw rule.
-     *
-     * @param {String} rule        RegExp as string
-     * @param {boolean} isActive   Is this rule active?
-     */
-    this.addRawRule = (rule: string, isActive = true) => {
-      this.applyRule(enabled_rawRules, disabled_rawRules, rule, isActive);
-    };
-
-    /**
-     * Return all active raw rules as an array.
-     *
-     * @return Array RegExp strings
-     */
-    this.getRawRules = () => Object.keys(enabled_rawRules);
-
-    /**
-     * Add a referral marketing rule to the referral marketing array
-     * and replace old referral marketing rule with new referral marketing rule.
-     *
-     * @param {String} rule        RegExp as string
-     * @param {boolean} isActive   Is this rule active?
-     */
-    this.addReferralMarketing = (rule: string, isActive = true) => {
-      this.applyRule(
-        enabled_referralMarketing,
-        disabled_referralMarketing,
-        rule,
-        isActive,
-      );
-    };
-
-    /**
-     * Add a exception to the exceptions array
-     * and replace old with new exception.
-     *
-     * @param {String} exception   RegExp as string
-     * @param {Boolean} isActive   Is this exception active?
-     */
-    this.addException = (exception: string, isActive = true) => {
-      if (isActive) {
-        enabled_exceptions[exception] = true;
-
-        if (disabled_exceptions[exception] !== undefined) {
-          delete disabled_exceptions[exception];
-        }
-      } else {
-        disabled_exceptions[exception] = true;
-
-        if (enabled_exceptions[exception] !== undefined) {
-          delete enabled_exceptions[exception];
-        }
-      }
-    };
-
-    /**
-     * Add a HTTP method to methods list.
-     *
-     * @param {String} method HTTP Method Name
-     */
-    this.addMethod = (method: string) => {
-      if (methods.indexOf(method) === -1) {
-        methods.push(method);
-      }
-    };
-
-    /**
-     * Check the requests' method.
-     *
-     * @param {requestDetails} details Requests details
-     * @returns {boolean} should be filtered or not
-     */
-    this.matchMethod = function (details) {
-      if (!methods.length) return true;
-      return methods.indexOf(details["method"]) > -1;
-    };
-
-    /**
-     * Private helper method to check if the url
-     * an exception.
-     *
-     * @param  {String} url     RegExp as string
-     * @return {boolean}        if matching? true: false
-     */
-    this.matchException = function (url) {
-      let result = false;
-
-      //Add the site blocked alert to every exception
-      if (url === siteBlockedAlert) return true;
-
-      for (const exception in enabled_exceptions) {
-        if (result) break;
-
-        let exception_regex = new RegExp(exception, "i");
-        result = exception_regex.test(url);
-      }
-
-      return result;
-    };
-
-    /**
-     * Add a redirection to the redirections array
-     * and replace old with new redirection.
-     *
-     * @param {String} redirection   RegExp as string
-     * @param {Boolean} isActive     Is this redirection active?
-     */
-    this.addRedirection = function (redirection, isActive = true) {
-      if (isActive) {
-        enabled_redirections[redirection] = true;
-
-        if (disabled_redirections[redirection] !== undefined) {
-          delete disabled_redirections[redirection];
-        }
-      } else {
-        disabled_redirections[redirection] = true;
-
-        if (enabled_redirections[redirection] !== undefined) {
-          delete enabled_redirections[redirection];
-        }
-      }
-    };
-
-    /**
-     * Return all redirection.
-     *
-     * @return url
-     */
-    this.getRedirection = function (url) {
-      let re = null;
-
-      for (const redirection in enabled_redirections) {
-        let result = url.match(new RegExp(redirection, "i"));
-
-        if (result && result.length > 0 && redirection) {
-          re = new RegExp(redirection, "i").exec(url)[1];
-
-          break;
-        }
-      }
-
-      return re;
-    };
-  }
+  // }
 
   // ##################################################################
 
@@ -644,12 +644,7 @@ const start = () => {
       for (let i = 0; i < providers.length; i++) {
         if (!providers[i].matchMethod(request)) continue;
         if (providers[i].matchURL(request.url)) {
-          result = removeFieldsFormURL(
-            providers[i],
-            request.url,
-            false,
-            request,
-          );
+          result = removeFieldsFormURL(providers[i], request.url);
         }
 
         /*
@@ -716,43 +711,4 @@ const start = () => {
 
   loadOldDataFromStore();
   getHash();
-  setBadgedStatus();
-
-  /**
-   * Check the request.
-   */
-  const promise = (requestDetails) => {
-    if (isDataURL(requestDetails)) {
-      return {};
-    } else {
-      return clearUrl(requestDetails);
-    }
-  };
-
-  /**
-   * To prevent long loading on data urls
-   * we will check here for data urls.
-   *
-   * @type {requestDetails}
-   * @return {boolean}
-   */
-  const isDataURL = (requestDetails) => {
-    const s = requestDetails.url;
-
-    return s.substring(0, 4) === "data";
-  }
-
-  /**
-   * Call by each Request and checking the url.
-   *
-   * @type {Array}
-   */
-  browser.webRequest.onBeforeRequest.addListener(
-    promise,
-    {
-      urls: ["<all_urls>"],
-      types: getData("types").concat(getData("pingRequestTypes")),
-    },
-    ["blocking"],
-  );
 };

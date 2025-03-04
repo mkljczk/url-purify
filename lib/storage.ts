@@ -16,6 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { handleError, isEmpty } from "./tools";
+
 /*jshint esversion: 6 */
 /*
  * This script is responsible for the storage.
@@ -164,13 +166,9 @@ const initStorage = (items: Object) => {
 const initSettings = () => {
   storage.ClearURLsData = [];
   storage.dataHash = "";
-  storage.badgedStatus = true;
   storage.globalStatus = true;
   storage.hashStatus = "error";
   storage.loggingStatus = false;
-  storage.log = { log: [] };
-  storage.statisticsStatus = true;
-  storage.badged_color = "#ffa500";
   storage.hashURL = "https://rules2.clearurls.xyz/rules.minify.hash";
   storage.ruleURL = "https://rules2.clearurls.xyz/data.minify.json";
   storage.contextMenuEnabled = true;
@@ -259,9 +257,7 @@ const replaceOldURLs = (url: string) => {
  * Load local saved data, if the browser is offline or
  * some other network trouble.
  */
-const loadOldDataFromStore = () => {
-  localDataHash = storage.dataHash;
-};
+const loadOldDataFromStore = () => (localDataHash = storage.dataHash);
 
 /**
  * Save the hash status to the local storage (RAM).

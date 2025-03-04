@@ -48,28 +48,6 @@ const isEmpty = (obj: Object) => Object.getOwnPropertyNames(obj).length === 0;
 const extractHost = (url: URL) => url.hostname;
 
 /**
- * Returns true if the url has a local host.
- */
-const checkLocalURL = (url) => {
-  let host = extractHost(url);
-
-  if (!host.match(/^\d/) && host !== "localhost") {
-    return false;
-  }
-
-  return (
-    ipRangeCheck(host, [
-      "10.0.0.0/8",
-      "172.16.0.0/12",
-      "192.168.0.0/16",
-      "100.64.0.0/10",
-      "169.254.0.0/16",
-      "127.0.0.1",
-    ]) || host === "localhost"
-  );
-};
-
-/**
  * Return the number of parameters query strings.
  */
 const countFields = (url: string) => [...new URL(url).searchParams].length;
@@ -97,19 +75,6 @@ const urlWithoutParamsAndHash = (url: URL) => {
 
   return new URL(newURL);
 };
-
-/**
- * Load local saved data, if the browser is offline or
- * some other network trouble.
- */
-const loadOldDataFromStore = () => {
-  localDataHash = storage.dataHash;
-};
-
-/**
- * Returns the current URL.
- */
-const getCurrentURL = (): string => currentURL;
 
 /**
  * Decodes an URL, also one that is encoded multiple times.
@@ -143,7 +108,7 @@ const isEncodedURI = (uri: string) => uri !== decodeURIComponent(uri || "");
 Object.prototype.getOrDefault = (key: string, defaultValue: Object) =>
   this[key] === undefined ? defaultValue : this[key];
 
-const handleError = (error) => {
+const handleError = (error: any) => {
   console.error("[ClearURLs ERROR]:" + error);
 };
 
@@ -174,9 +139,8 @@ const sha256 = async (message: string) => {
  *
  * @returns non-secure random ASCII
  */
-const randomASCII = (len: number) => [...Array(len)]
-    .map(() => (~~(Math.random() * 36)).toString(36))
-    .join("");
+const randomASCII = (len: number) =>
+  [...Array(len)].map(() => (~~(Math.random() * 36)).toString(36)).join("");
 
 /**
  * Returns an URLSearchParams as string.
@@ -194,4 +158,15 @@ const urlSearchParamsToString = (searchParams: URLSearchParams) => {
   });
 
   return rtn.join("&");
-}
+};
+
+export {
+  isEmpty,
+  extractHost,
+  extractFragments,
+  urlWithoutParamsAndHash,
+  decodeURL,
+  handleError,
+  randomASCII,
+  urlSearchParamsToString,
+};

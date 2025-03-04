@@ -16,18 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { randomASCII } from "./tools";
+
 /*jshint esversion: 6 */
 
 /**
  * Filters eTag headers from web requests.
  */
 const eTagFilter = (requestDetails) => {
-  if (
-    !requestDetails.responseHeaders ||
-    !storage.eTagFiltering ||
-    (storage.localHostsSkipping && checkLocalURL(new URL(requestDetails.url)))
-  )
-    return {};
+  if (!requestDetails.responseHeaders || !storage.eTagFiltering) return {};
   for (let i = 0; i < requestDetails.responseHeaders.length; i++) {
     const header = requestDetails.responseHeaders[i];
 
