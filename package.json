@@ -13,7 +13,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --p ./tsconfig-build.json && vite build",
-    "format": "biome format --write ./lib",
+    "format": "biome format ./lib",
     "check": "biome check ./lib"
   },
   "license": "LGPL-3.0-only",
