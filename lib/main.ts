@@ -1,7 +1,7 @@
 import { Provider } from './provider';
 import type { SerializedRules } from './types';
 
-interface URLPurifierConfig {
+interface URLPurifyConfig {
   hashUrl?: string;
   ruleUrl?: string;
   hashFromMemory?: string;
@@ -10,7 +10,7 @@ interface URLPurifierConfig {
   referralMarketing?: boolean;
 }
 
-class ClearURLs {
+class URLPurify {
   private referralMarketing: boolean;
   private providers: Record<string, Provider> = {};
 
@@ -23,7 +23,7 @@ class ClearURLs {
     hashFromMemory,
     rulesFromMemory,
     referralMarketing = true,
-  }: URLPurifierConfig) {
+  }: URLPurifyConfig) {
     this.referralMarketing = referralMarketing;
     if (rulesFromMemory) this.createProviders(rulesFromMemory);
   }
@@ -69,4 +69,4 @@ class ClearURLs {
   };
 }
 
-export { ClearURLs };
+export { URLPurify };
