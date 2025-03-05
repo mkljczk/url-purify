@@ -2,13 +2,13 @@
   "name": "@mkljczk/url-purify",
   "version": "0.0.1",
   "type": "module",
-  "homepage": "https://github.com/mkljczk/ClearURLs/",
+  "homepage": "https://github.com/mkljczk/url-purify/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mkljczk/ClearURLs/"
+    "url": "https://github.com/mkljczk/url-purify/"
   },
   "bugs": {
-    "url": "https://github.com/mkljczk/ClearURLs/issues"
+    "url": "https://github.com/mkljczk/url-purify/issues"
   },
   "scripts": {
     "dev": "vite",

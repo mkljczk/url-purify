@@ -2,14 +2,29 @@ import { Provider } from './provider';
 import { sha256 } from './tools';
 import type { SerializedRules } from './types';
 
-interface URLPurifyConfig {
+type URLPurifyConfig = (
+  | {
+      /** URL for up-to-date URL cleaning rules */
+      ruleUrl: string;
+      /** Previously fetched URL cleaning rules */
+      rulesFromMemory?: SerializedRules;
+    }
+  | {
+      /** URL for up-to-date URL cleaning rules */
+      ruleUrl?: string;
+      /** Previously fetched URL cleaning rules */
+      rulesFromMemory: SerializedRules;
+    }
+) & {
+  /** URL for sha256 hash of the up-to-date ruleset */
   hashUrl?: string;
-  ruleUrl?: string;
+  /** sha256 hash of a previously fetched ruleset */
   hashFromMemory?: string;
-  rulesFromMemory?: SerializedRules;
+  /** Callback function to be called when new rules are fetched */
   onFetchedRules?: (newHash: string, newRules: SerializedRules) => void;
+  /** Remove referral marketing parameters from URLs */
   referralMarketing?: boolean;
-}
+};
 
 class URLPurify {
   private referralMarketing: boolean;
@@ -60,6 +75,11 @@ class URLPurify {
     }
   };
 
+  /**
+   * Clears tracking elements from a URL.
+   * @param url - The URL to clear tracking elements from.
+   * @returns URL without tracking elements.
+   */
   clearUrl = (url: string) => {
     let result: ReturnType<
       InstanceType<typeof Provider>['removeFieldsFormURL']
@@ -88,12 +108,12 @@ class URLPurify {
     return result.url;
   };
 
-  fetchHash = async (url: string) => {
+  private fetchHash = async (url: string) => {
     const response = await fetch(url);
     return await response.text();
   };
 
-  fetchRules = async (url: string): Promise<SerializedRules> => {
+  private fetchRules = async (url: string): Promise<SerializedRules> => {
     const response = await fetch(url);
     const rulesText = await response.text();
     const rules = JSON.parse(rulesText);
