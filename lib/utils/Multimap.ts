@@ -120,10 +120,15 @@ class Multimap<K, V> implements Iterable<[K, V]> {
   keys() {
     return this._map.keys();
   }
-  forEach<T>(callback: (this: T | this, key: K, value: V, map: this) => void, thisArg?: T) {
+  forEach<T>(
+    callback: (this: T | this, key: K, value: V, map: this) => void,
+    thisArg?: T,
+  ) {
     for (const [key, value] of this.entries()) {
       callback.call(thisArg === undefined ? this : thisArg, key, value, this);
     }
   }
   [Symbol.iterator] = (): IterableIterator<[K, V]> => this.entries();
 }
+
+export { Multimap };

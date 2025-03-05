@@ -16,46 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*jshint esversion: 6 */
-/*
- * This script is responsible for some tools.
- */
+import { URLHashParams } from "./utils/URLHashParams";
 
 // Needed by the sha256 method
 const enc = new TextEncoder();
 
-// Max amount of log entries to prevent performance issues
-const logThreshold = 5000;
-
-/*
- * To support Waterfox.
- */
-Array.prototype.rmEmpty = () => this.filter((v) => v);
-
-/*
- * To support Waterfox.
- */
-Array.prototype.flatten = () => this.reduce((a, b) => a.concat(b), []);
-
-/**
- * Check if an object is empty.
- */
-const isEmpty = (obj: Object) => Object.getOwnPropertyNames(obj).length === 0;
-
-/**
- * Extract the host without port from an url.
- */
-const extractHost = (url: URL) => url.hostname;
-
-/**
- * Return the number of parameters query strings.
- */
-const countFields = (url: string) => [...new URL(url).searchParams].length;
-
 /**
  * Extract the fragments from an url.
- * @param  {URL} url URL as object
- * @return {URLHashParams}     fragments as URLSearchParams object
+ * @param  {URL} url  URL as object
+ * @return {URLHashParams}  fragments as URLSearchParams object
  */
 const extractFragments = (url: URL) => new URLHashParams(url);
 
@@ -103,28 +72,13 @@ const decodeURL = (url: string) => {
 const isEncodedURI = (uri: string) => uri !== decodeURIComponent(uri || "");
 
 /**
- * Gets the value of at `key` an object. If the resolved value is `undefined`, the `defaultValue` is returned in its place.
- */
-Object.prototype.getOrDefault = (key: string, defaultValue: Object) =>
-  this[key] === undefined ? defaultValue : this[key];
-
-const handleError = (error: any) => {
-  console.error("[ClearURLs ERROR]:" + error);
-};
-
-/**
- * Checks if the storage is available.
- */
-const isStorageAvailable = () => storage.ClearURLsData.length !== 0;
-
-/**
  * This method calculates the SHA-256 hash as HEX string of the given message.
  * This method uses the native hashing implementations of the SubtleCrypto interface which is supported by all browsers
  * that implement the Web Cryptography API specification and is based on:
  * https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest
  *
  * @param message message for which the hash should be calculated
- * @returns {Promise<string>} SHA-256 of the given message
+ * @returns SHA-256 of the given message
  */
 const sha256 = async (message: string) => {
   const msgUint8 = enc.encode(message);
@@ -133,14 +87,6 @@ const sha256 = async (message: string) => {
 
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 };
-
-/**
- * Generates a non-secure random ASCII string of length {@code len}.
- *
- * @returns non-secure random ASCII
- */
-const randomASCII = (len: number) =>
-  [...Array(len)].map(() => (~~(Math.random() * 36)).toString(36)).join("");
 
 /**
  * Returns an URLSearchParams as string.
@@ -161,12 +107,9 @@ const urlSearchParamsToString = (searchParams: URLSearchParams) => {
 };
 
 export {
-  isEmpty,
-  extractHost,
   extractFragments,
   urlWithoutParamsAndHash,
   decodeURL,
-  handleError,
-  randomASCII,
+  sha256,
   urlSearchParamsToString,
 };

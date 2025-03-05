@@ -16,6 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { Multimap } from "./Multimap";
+
 /**
  * Models a hash parameter of a given {@link URL}.
  */
@@ -74,3 +76,5 @@ class URLHashParams {
     return rtn.join("&");
   }
 }
+
+export { URLHashParams };
