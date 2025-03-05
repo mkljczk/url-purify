@@ -1,21 +1,12 @@
 import { Provider } from './provider';
 import { sha256 } from './tools';
-import type { SerializedRules } from './types';
+import type { SerializedProvider, SerializedRules } from './types';
 
-type URLPurifyConfig = (
-  | {
-      /** URL for up-to-date URL cleaning rules */
-      ruleUrl: string;
-      /** Previously fetched URL cleaning rules */
-      rulesFromMemory?: SerializedRules;
-    }
-  | {
-      /** URL for up-to-date URL cleaning rules */
-      ruleUrl?: string;
-      /** Previously fetched URL cleaning rules */
-      rulesFromMemory: SerializedRules;
-    }
-) & {
+interface URLPurifyConfig {
+  /** URL for up-to-date URL cleaning rules */
+  ruleUrl: string;
+  /** Previously fetched URL cleaning rules */
+  rulesFromMemory?: SerializedRules;
   /** URL for sha256 hash of the up-to-date ruleset */
   hashUrl?: string;
   /** sha256 hash of a previously fetched ruleset */
@@ -24,7 +15,7 @@ type URLPurifyConfig = (
   onFetchedRules?: (newHash: string, newRules: SerializedRules) => void;
   /** Remove referral marketing parameters from URLs */
   referralMarketing?: boolean;
-};
+}
 
 class URLPurify {
   private referralMarketing: boolean;
@@ -128,4 +119,9 @@ class URLPurify {
   };
 }
 
-export { URLPurify };
+export {
+  URLPurify,
+  type URLPurifyConfig,
+  type SerializedRules,
+  type SerializedProvider,
+};

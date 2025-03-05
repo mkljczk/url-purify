@@ -14,11 +14,13 @@
     "dev": "vite",
     "build": "tsc --p ./tsconfig-build.json && vite build",
     "format": "biome format ./lib",
-    "check": "biome check ./lib"
+    "check": "biome check ./lib",
+    "docs": "npx typedoc"
   },
   "license": "LGPL-3.0-only",
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "typedoc": "^0.27.9",
     "typescript": "^5.8.2",
     "vite": "^6.2.0",
     "vite-plugin-dts": "^4.5.3"
