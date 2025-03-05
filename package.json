@@ -2,7 +2,7 @@
   "name": "@mkljczk/url-purify",
   "version": "0.0.1",
   "type": "module",
-  "homepage": "https://github.com/mkljczk/url-purify/",
+  "homepage": "http://url-purify.mkljczk.nl/",
   "repository": {
     "type": "git",
     "url": "https://github.com/mkljczk/url-purify/"
