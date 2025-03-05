@@ -1,5 +1,5 @@
-import { Provider } from "./provider";
-import type { SerializedRules } from "./types";
+import { Provider } from './provider';
+import type { SerializedRules } from './types';
 
 interface URLPurifierConfig {
   hashUrl?: string;
@@ -18,9 +18,9 @@ class ClearURLs {
 
   constructor({
     // @ts-ignore
-    hashURL = "https://rules2.clearurls.xyz/rules.minify.hash",
+    hashURL = 'https://rules2.clearurls.xyz/rules.minify.hash',
     // @ts-ignore
-    ruleURL = "https://rules2.clearurls.xyz/data.minify.json",
+    ruleURL = 'https://rules2.clearurls.xyz/data.minify.json',
     // @ts-ignore
     hashFromMemory,
     rulesFromMemory,
@@ -44,7 +44,7 @@ class ClearURLs {
 
   clearUrl = (url: string) => {
     let result: ReturnType<
-      InstanceType<typeof Provider>["removeFieldsFormURL"]
+      InstanceType<typeof Provider>['removeFieldsFormURL']
     > = {
       url: url,
       redirect: false,

@@ -12,10 +12,13 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc --p ./tsconfig-build.json && vite build"
+    "build": "tsc --p ./tsconfig-build.json && vite build",
+    "format": "biome format --write ./lib",
+    "check": "biome check ./lib"
   },
   "license": "LGPL-3.0-only",
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "typescript": "^5.8.2",
     "vite": "^6.2.0",
     "vite-plugin-dts": "^4.5.3"

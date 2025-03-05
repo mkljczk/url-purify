@@ -24,13 +24,13 @@ class Multimap<K, V> implements Iterable<[K, V]> {
   private _map: Map<K, Set<V>>;
 
   constructor() {
-    Object.defineProperty(this, "_map", {
+    Object.defineProperty(this, '_map', {
       enumerable: true,
       configurable: true,
       writable: true,
       value: void 0,
     });
-    Object.defineProperty(this, "_size", {
+    Object.defineProperty(this, '_size', {
       enumerable: true,
       configurable: true,
       writable: true,
@@ -46,9 +46,8 @@ class Multimap<K, V> implements Iterable<[K, V]> {
     const values = this._map.get(key);
     if (values) {
       return new Set(values);
-    } else {
-      return new Set();
     }
+    return new Set();
   }
   put(key: K, value: V) {
     let values = this._map.get(key);

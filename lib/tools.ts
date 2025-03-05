@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { URLHashParams } from "./utils/URLHashParams";
+import { URLHashParams } from './utils/URLHashParams';
 
 // Needed by the sha256 method
 const enc = new TextEncoder();
@@ -35,11 +35,11 @@ const urlWithoutParamsAndHash = (url: URL) => {
   let newURL = url.toString();
 
   if (url.search) {
-    newURL = newURL.replace(url.search, "");
+    newURL = newURL.replace(url.search, '');
   }
 
   if (url.hash) {
-    newURL = newURL.replace(url.hash, "");
+    newURL = newURL.replace(url.hash, '');
   }
 
   return new URL(newURL);
@@ -58,8 +58,8 @@ const decodeURL = (url: string) => {
   }
 
   // Required (e.g., to fix https://github.com/ClearURLs/Addon/issues/71)
-  if (!rtn.startsWith("http")) {
-    rtn = "http://" + rtn;
+  if (!rtn.startsWith('http')) {
+    rtn = `http://${rtn}`;
   }
 
   return rtn;
@@ -69,7 +69,7 @@ const decodeURL = (url: string) => {
  * Returns true, iff the given URI is encoded
  * @see https://stackoverflow.com/a/38265168
  */
-const isEncodedURI = (uri: string) => uri !== decodeURIComponent(uri || "");
+const isEncodedURI = (uri: string) => uri !== decodeURIComponent(uri || '');
 
 /**
  * This method calculates the SHA-256 hash as HEX string of the given message.
@@ -82,10 +82,10 @@ const isEncodedURI = (uri: string) => uri !== decodeURIComponent(uri || "");
  */
 const sha256 = async (message: string) => {
   const msgUint8 = enc.encode(message);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
 
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 };
 
 /**
@@ -97,13 +97,13 @@ const urlSearchParamsToString = (searchParams: URLSearchParams) => {
 
   searchParams.forEach((value, key) => {
     if (value) {
-      rtn.push(key + "=" + encodeURIComponent(value));
+      rtn.push(`${key}=${encodeURIComponent(value)}`);
     } else {
       rtn.push(key);
     }
   });
 
-  return rtn.join("&");
+  return rtn.join('&');
 };
 
 export {

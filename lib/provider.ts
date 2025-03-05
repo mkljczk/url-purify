@@ -3,9 +3,9 @@ import {
   extractFragments,
   urlSearchParamsToString,
   urlWithoutParamsAndHash,
-} from "./tools";
-import type { SerializedProvider } from "./types";
-import { URLHashParams } from "./utils/URLHashParams";
+} from './tools';
+import type { SerializedProvider } from './types';
+import type { URLHashParams } from './utils/URLHashParams';
 
 class Provider {
   // @ts-ignore
@@ -37,7 +37,7 @@ class Provider {
   ) {
     this.name = name;
 
-    if (completeProvider) this.enabled_rules[".*"] = true;
+    if (completeProvider) this.enabled_rules['.*'] = true;
 
     //Add URL Pattern
     this.setURLPattern(urlPattern);
@@ -74,7 +74,7 @@ class Provider {
    * Add URL pattern.
    */
   private setURLPattern = (urlPatterns: RegExp | string) => {
-    this.urlPattern = new RegExp(urlPatterns, "i");
+    this.urlPattern = new RegExp(urlPatterns, 'i');
   };
 
   /**
@@ -166,7 +166,7 @@ class Provider {
     for (const exception in this.enabled_exceptions) {
       if (result) break;
 
-      let exception_regex = new RegExp(exception, "i");
+      const exception_regex = new RegExp(exception, 'i');
       result = exception_regex.test(url);
     }
 
@@ -192,10 +192,10 @@ class Provider {
     let re: string | null = null;
 
     for (const redirection in this.enabled_redirections) {
-      let result = url.match(new RegExp(redirection, "i"));
+      const result = url.match(new RegExp(redirection, 'i'));
 
       if (result && result.length > 0 && redirection) {
-        re = new RegExp(redirection, "i").exec(url)?.[1] || null;
+        re = new RegExp(redirection, 'i').exec(url)?.[1] || null;
 
         break;
       }
@@ -225,19 +225,19 @@ class Provider {
     redirect?: boolean;
   } => {
     let url = pureUrl;
-    let domain = "";
+    let domain = '';
     let fragments: URLHashParams;
     let fields: URLSearchParams;
-    let rules = this.getRules();
+    const rules = this.getRules();
     let changes = false;
-    let rawRules = this.getRawRules();
+    const rawRules = this.getRawRules();
     let urlObject = new URL(url);
 
     /*
      * Expand the url by provider redirections. So no tracking on
      * url redirections form sites to sites.
      */
-    let re = this.getRedirection(url);
+    const re = this.getRedirection(url);
     if (re !== null) {
       url = decodeURL(re);
 
@@ -250,14 +250,14 @@ class Provider {
     /*
      * Apply raw rules to the URL.
      */
-    rawRules.forEach((rawRule) => {
-      let beforeReplace = url;
-      url = url.replace(new RegExp(rawRule, "gi"), "");
+    for (const rawRule of rawRules) {
+      const beforeReplace = url;
+      url = url.replace(new RegExp(rawRule, 'gi'), '');
 
       if (beforeReplace !== url) {
         changes = true;
       }
-    });
+    }
 
     urlObject = new URL(url);
     fields = urlObject.searchParams;
@@ -267,32 +267,30 @@ class Provider {
     /**
      * Only test for matches, if there are fields or fragments that can be cleaned.
      */
-    if (fields.toString() !== "" || fragments.toString() !== "") {
-      rules.forEach((rule) => {
+    if (fields.toString() !== '' || fragments.toString() !== '') {
+      for (const rule of rules) {
         for (const field of fields.keys()) {
-          if (new RegExp("^" + rule + "$", "gi").test(field)) {
+          if (new RegExp(`^${rule}$`, 'gi').test(field)) {
             fields.delete(field);
             changes = true;
           }
         }
 
         for (const fragment of fragments.keys()) {
-          if (new RegExp("^" + rule + "$", "gi").test(fragment)) {
+          if (new RegExp(`^${rule}$`, 'gi').test(fragment)) {
             fragments.delete(fragment);
             changes = true;
           }
         }
-      });
+      }
 
       let finalURL = domain;
 
-      if (fields.toString() !== "")
-        finalURL += "?" + urlSearchParamsToString(fields);
-      if (fragments.toString() !== "") finalURL += "#" + fragments.toString();
+      if (fields.toString() !== '')
+        finalURL += `?${urlSearchParamsToString(fields)}`;
+      if (fragments.toString() !== '') finalURL += `#${fragments.toString()}`;
 
-      url = finalURL
-        .replace(new RegExp("\\?&"), "?")
-        .replace(new RegExp("#&"), "#");
+      url = finalURL.replace(/\?&/, '?').replace(/#&/, '#');
     }
 
     return {

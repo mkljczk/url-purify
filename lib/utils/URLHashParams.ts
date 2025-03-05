@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { Multimap } from "./Multimap";
+import { Multimap } from './Multimap';
 
 /**
  * Models a hash parameter of a given {@link URL}.
@@ -25,7 +25,7 @@ class URLHashParams {
   private _params: Multimap<string, string | null>;
 
   constructor(url: URL) {
-    Object.defineProperty(this, "_params", {
+    Object.defineProperty(this, '_params', {
       enumerable: true,
       configurable: true,
       writable: true,
@@ -33,9 +33,9 @@ class URLHashParams {
     });
     this._params = new Multimap();
     const hash = url.hash.slice(1);
-    const params = hash.split("&");
+    const params = hash.split('&');
     for (const p of params) {
-      const param = p.split("=");
+      const param = p.split('=');
       if (!param[0]) continue;
       const key = param[0];
       let value: string | null = null;
@@ -68,12 +68,12 @@ class URLHashParams {
     const rtn: Array<string> = [];
     this._params.forEach((key, value) => {
       if (value) {
-        rtn.push(key + "=" + value);
+        rtn.push(`${key}=${value}`);
       } else {
         rtn.push(key);
       }
     });
-    return rtn.join("&");
+    return rtn.join('&');
   }
 }
 
