@@ -68,4 +68,4 @@ class ClearURLs {
   };
 }
 
-export { ClearURLs }
+export { ClearURLs };
