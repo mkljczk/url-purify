@@ -15,17 +15,29 @@ class URLPurify {
   private providers: Record<string, Provider> = {};
 
   constructor({
-    // @ts-ignore
-    hashURL = 'https://rules2.clearurls.xyz/rules.minify.hash',
-    // @ts-ignore
-    ruleURL = 'https://rules2.clearurls.xyz/data.minify.json',
-    // @ts-ignore
+    hashUrl,
+    ruleUrl,
     hashFromMemory,
     rulesFromMemory,
     referralMarketing = true,
   }: URLPurifyConfig) {
+    if (!ruleUrl && !rulesFromMemory)
+      throw new Error(
+        'Either rule URL or a prefetched ruleset must be provided',
+      );
+
     this.referralMarketing = referralMarketing;
     if (rulesFromMemory) this.createProviders(rulesFromMemory);
+
+    if (hashFromMemory && ruleUrl && hashUrl) {
+      this.fetchHash(hashUrl).then((newHash) => {
+        if (newHash !== hashFromMemory) {
+          this.fetchRules(ruleUrl).then(this.createProviders);
+        }
+      });
+    } else if (ruleUrl) {
+      this.fetchRules(ruleUrl).then(this.createProviders);
+    }
   }
 
   private createProviders = (rules: SerializedRules) => {
@@ -66,6 +78,16 @@ class URLPurify {
 
     // Default case
     return result.url;
+  };
+
+  fetchHash = async (url: string) => {
+    const response = await fetch(url);
+    return await response.text();
+  };
+
+  fetchRules = async (url: string): Promise<SerializedRules> => {
+    const response = await fetch(url);
+    return await response.json();
   };
 }
 
