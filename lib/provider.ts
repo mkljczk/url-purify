@@ -204,6 +204,10 @@ class Provider {
     return re;
   };
 
+  getName = () => {
+    return this.name;
+  };
+
   /**
    * Check the url is matching the ProviderURL.
    */

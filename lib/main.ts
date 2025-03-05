@@ -49,11 +49,11 @@ class ClearURLs {
     };
 
     /*
-     * Call for every provider the removeFieldsFormURL method.
+     * Call the removeFieldsFormURL method for every provider.
      */
     for (const provider of Object.values(this.providers)) {
       if (provider.matchURL(result.url)) {
-        result = provider.removeFieldsFormURL(url);
+        result = provider.removeFieldsFormURL(result.url);
       }
 
       /*
@@ -65,7 +65,7 @@ class ClearURLs {
     }
 
     // Default case
-    return url;
+    return result.url;
   };
 }
 
