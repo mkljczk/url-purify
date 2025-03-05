@@ -4,7 +4,7 @@ import type { SerializedProvider, SerializedRules } from './types';
 
 interface URLPurifyConfig {
   /** URL for up-to-date URL cleaning rules */
-  ruleUrl: string;
+  ruleUrl?: string;
   /** Previously fetched URL cleaning rules */
   rulesFromMemory?: SerializedRules;
   /** URL for sha256 hash of the up-to-date ruleset */
