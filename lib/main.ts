@@ -1,4 +1,5 @@
 import { Provider } from './provider';
+import { sha256 } from './tools';
 import type { SerializedRules } from './types';
 
 interface URLPurifyConfig {
@@ -6,12 +7,14 @@ interface URLPurifyConfig {
   ruleUrl?: string;
   hashFromMemory?: string;
   rulesFromMemory?: SerializedRules;
-  onFetchedRules?: (newHash: string, newRules: string) => void;
+  onFetchedRules?: (newHash: string, newRules: SerializedRules) => void;
   referralMarketing?: boolean;
 }
 
 class URLPurify {
   private referralMarketing: boolean;
+  private onFetchedRules?: (newHash: string, newRules: SerializedRules) => void;
+
   private providers: Record<string, Provider> = {};
 
   constructor({
@@ -19,6 +22,7 @@ class URLPurify {
     ruleUrl,
     hashFromMemory,
     rulesFromMemory,
+    onFetchedRules,
     referralMarketing = true,
   }: URLPurifyConfig) {
     if (!ruleUrl && !rulesFromMemory)
@@ -27,16 +31,20 @@ class URLPurify {
       );
 
     this.referralMarketing = referralMarketing;
+    this.onFetchedRules = onFetchedRules;
+
     if (rulesFromMemory) this.createProviders(rulesFromMemory);
 
-    if (hashFromMemory && ruleUrl && hashUrl) {
-      this.fetchHash(hashUrl).then((newHash) => {
-        if (newHash !== hashFromMemory) {
-          this.fetchRules(ruleUrl).then(this.createProviders);
-        }
-      });
-    } else if (ruleUrl) {
-      this.fetchRules(ruleUrl).then(this.createProviders);
+    if (ruleUrl) {
+      if (hashFromMemory && hashUrl) {
+        this.fetchHash(hashUrl).then((newHash) => {
+          if (newHash !== hashFromMemory) {
+            this.fetchRules(ruleUrl).then(this.createProviders);
+          }
+        });
+      } else {
+        this.fetchRules(ruleUrl).then(this.createProviders);
+      }
     }
   }
 
@@ -87,7 +95,16 @@ class URLPurify {
 
   fetchRules = async (url: string): Promise<SerializedRules> => {
     const response = await fetch(url);
-    return await response.json();
+    const rulesText = await response.text();
+    const rules = JSON.parse(rulesText);
+
+    sha256(rulesText).then((hash) => {
+      if (this.onFetchedRules) {
+        this.onFetchedRules(hash, rules);
+      }
+    });
+
+    return rules;
   };
 }
 
