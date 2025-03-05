@@ -1,0 +1,28 @@
+{
+  "name": "@mkljczk/clearurls",
+  "version": "0.0.1",
+  "type": "module",
+  "homepage": "https://github.com/mkljczk/ClearURLs/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mkljczk/ClearURLs/"
+  },
+  "bugs": {
+    "url": "https://github.com/mkljczk/ClearURLs/issues"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --p ./tsconfig-build.json && vite build"
+  },
+  "license": "LGPL-3.0-only",
+  "devDependencies": {
+    "typescript": "^5.8.2",
+    "vite": "^6.2.0",
+    "vite-plugin-dts": "^4.5.3"
+  },
+  "module": "./dist/main.es.js",
+  "types": "dist/main.d.ts",
+  "files": [
+    "dist"
+  ]
+}

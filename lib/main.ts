@@ -14,11 +14,14 @@ interface URLPurifierConfig {
 
 class ClearURLs {
   private referralMarketing: boolean;
-  private providers: Record<string, Provider>;
+  private providers: Record<string, Provider> = {};
 
   constructor({
+    // @ts-ignore
     hashURL = "https://rules2.clearurls.xyz/rules.minify.hash",
+    // @ts-ignore
     ruleURL = "https://rules2.clearurls.xyz/data.minify.json",
+    // @ts-ignore
     hashFromMemory,
     rulesFromMemory,
     referralMarketing = true,

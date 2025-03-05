@@ -8,13 +8,15 @@ import type { SerializedProvider } from "./types";
 import { URLHashParams } from "./utils/URLHashParams";
 
 class Provider {
+  // @ts-ignore
   private name: string;
+  // @ts-ignore
   private urlPattern: RegExp;
   private enabled_rules: Record<string, boolean> = {};
-  private enabled_exceptions = {};
-  private enabled_redirections = {};
-  private enabled_rawRules = {};
-  private enabled_referralMarketing = {};
+  private enabled_exceptions: Record<string, boolean> = {};
+  private enabled_redirections: Record<string, boolean> = {};
+  private enabled_rawRules: Record<string, boolean> = {};
+  private enabled_referralMarketing: Record<string, boolean> = {};
   private referralMarketing: boolean;
 
   /**
@@ -177,7 +179,7 @@ class Provider {
    *
    * @param redirection RegExp as string
    */
-  private addRedirection = function (redirection: string) {
+  private addRedirection = (redirection: string) => {
     this.enabled_redirections[redirection] = true;
   };
 
