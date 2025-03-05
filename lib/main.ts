@@ -5,9 +5,7 @@ interface URLPurifierConfig {
   hashUrl?: string;
   ruleUrl?: string;
   hashFromMemory?: string;
-  rulesFromMemory?: {
-    providers: SerializedRules;
-  };
+  rulesFromMemory?: SerializedRules;
   onFetchedRules?: (newHash: string, newRules: string) => void;
   referralMarketing?: boolean;
 }
@@ -27,7 +25,7 @@ class ClearURLs {
     referralMarketing = true,
   }: URLPurifierConfig) {
     this.referralMarketing = referralMarketing;
-    if (rulesFromMemory) this.createProviders(rulesFromMemory.providers);
+    if (rulesFromMemory) this.createProviders(rulesFromMemory);
   }
 
   private createProviders = (rules: SerializedRules) => {
@@ -59,7 +57,7 @@ class ClearURLs {
       }
 
       /*
-       * Ensure that the function go not into a loop.
+       * Ensure that the function doesn't get into a loop.
        */
       if (result.redirect) {
         return result.url;
