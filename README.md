@@ -1,5 +1,10 @@
 # `url-purify`
 
+[![GitHub Repo stars](https://img.shields.io/github/stars/mkljczk/url-purify)](https://github.com/mkljczk/url-purify)
+[![GitHub License](https://img.shields.io/github/license/mkljczk/url-purify)](https://github.com/mkljczk/url-purify?tab=LGPL-3.0-1-ov-file#readme)
+[![NPM Version](https://img.shields.io/npm/v/%40mkljczk%2Furl-purify)
+![NPM Downloads](https://img.shields.io/npm/dw/%40mkljczk%2Furl-purify)](https://www.npmjs.com/package/@mkljczk/url-purify)
+
 `url-purify` is a work-in-progress JavaScript library that cleans URLs by removing tracking parameters and other unnecessary elements. It is forked from the [ClearURLs](https://github.com/ClearURLs/Addon/) browser extension.
 
 ## Usage
