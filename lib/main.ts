@@ -99,6 +99,24 @@ class URLPurify {
     return result.url;
   };
 
+  /**
+    * Sets rules provided by the user.
+    * @param rules - The rules object.
+    * @param _hash - The sha256 hash of the rules object (currently unused).
+    */
+  setRules = (rules: SerializedRules, _hash?: string) => {
+    this.createProviders(rules);
+  };
+
+  /**
+    * Sets the URLs for rules database and hash source.
+    * @param ruleUrl - The URL for the rules database.
+    * @param _hashUrl - The URL for the hash source (currently unused).
+    */
+  setUrls = (ruleUrl: string, _hashUrl?: string) => {
+    this.fetchRules(ruleUrl).then(this.createProviders);
+  };
+
   private fetchHash = async (url: string) => {
     const response = await fetch(url);
     return await response.text();
