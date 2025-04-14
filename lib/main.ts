@@ -1,6 +1,14 @@
-import { Provider } from './provider';
-import { sha256 } from './tools';
-import type { SerializedProvider, SerializedRules } from './types';
+import { Provider } from "./provider";
+import { mappings } from "./redirect-mappings";
+import { RedirectProvider } from "./redirect-provider";
+import { services } from "./redirect-services";
+import { sha256 } from "./tools";
+import type {
+  InstancePickMode,
+  SerializedProvider,
+  SerializedRules,
+  SerializedServices,
+} from "./types";
 
 interface URLPurifyConfig {
   /** URL for up-to-date URL cleaning rules */
@@ -11,17 +19,28 @@ interface URLPurifyConfig {
   hashUrl?: string;
   /** sha256 hash of a previously fetched ruleset */
   hashFromMemory?: string;
+  /** URL for up-to-date redirect services URLs */
+  redirectServicesUrl?: string;
+  /** Previously fetched redirect services URLs */
+  redirectServicesFromMemory?: SerializedServices;
   /** Callback function to be called when new rules are fetched */
   onFetchedRules?: (newHash: string, newRules: SerializedRules) => void;
+  /** Callback function to be called when new redirect services URLs are fetched */
+  onFetchedRedirectServices?: (newServices: SerializedServices) => void;
   /** Remove referral marketing parameters from URLs */
   referralMarketing?: boolean;
+  /** Whether to select the first available instance or pick a random one */
+  instancePickMode?: InstancePickMode;
 }
 
 class URLPurify {
   private referralMarketing: boolean;
+  private instancePickMode: InstancePickMode;
   private onFetchedRules?: (newHash: string, newRules: SerializedRules) => void;
+  private onFetchedRedirectServices?: (newServices: SerializedServices) => void;
 
   private providers: Record<string, Provider> = {};
+  private redirectProviders: Record<string, RedirectProvider> = {};
 
   constructor({
     hashUrl,
@@ -29,15 +48,21 @@ class URLPurify {
     hashFromMemory,
     rulesFromMemory,
     onFetchedRules,
+    onFetchedRedirectServices,
     referralMarketing = true,
+    redirectServicesUrl,
+    redirectServicesFromMemory = services,
+    instancePickMode = 'first',
   }: URLPurifyConfig) {
-    if (!ruleUrl && !rulesFromMemory)
+    if (!ruleUrl && !rulesFromMemory && !redirectServicesUrl && !redirectServicesFromMemory)
       throw new Error(
-        'Either rule URL or a prefetched ruleset must be provided',
+        "Either rule URL or a prefetched ruleset must be provided",
       );
 
     this.referralMarketing = referralMarketing;
+    this.instancePickMode = instancePickMode;
     this.onFetchedRules = onFetchedRules;
+    this.onFetchedRedirectServices = onFetchedRedirectServices;
 
     if (rulesFromMemory) this.createProviders(rulesFromMemory);
 
@@ -51,6 +76,15 @@ class URLPurify {
       } else {
         this.fetchRules(ruleUrl).then(this.createProviders);
       }
+    }
+
+    if (redirectServicesFromMemory)
+      this.createRedirectProviders(redirectServicesFromMemory);
+
+    if (redirectServicesUrl) {
+      this.fetchRedirectServices(redirectServicesUrl).then(
+        this.createRedirectProviders,
+      );
     }
   }
 
@@ -66,6 +100,26 @@ class URLPurify {
     }
   };
 
+  private createRedirectProviders = (services: SerializedServices) => {
+    this.redirectProviders = {};
+
+    mappings.forEach((mapping) => {
+      const mappedServices = services.filter((service) =>
+        mapping.targets.includes(service.type),
+      );
+
+      this.redirectProviders[mapping.name] = new RedirectProvider(
+        mapping,
+        mappedServices,
+        this.instancePickMode,
+      );
+    });
+
+    for (const service of services) {
+      this.redirectProviders[service.type];
+    }
+  };
+
   /**
    * Clears tracking elements from a URL.
    * @param url - The URL to clear tracking elements from.
@@ -73,7 +127,7 @@ class URLPurify {
    */
   clearUrl = (url: string) => {
     let result: ReturnType<
-      InstanceType<typeof Provider>['removeFieldsFormURL']
+      InstanceType<typeof Provider>["removeFieldsFormURL"]
     > = {
       url: url,
       redirect: false,
@@ -92,6 +146,12 @@ class URLPurify {
        */
       if (result.redirect) {
         return result.url;
+      }
+    }
+
+    for (const provider of Object.values(this.redirectProviders)) {
+      if (provider.matchURL(result.url)) {
+        result = provider.redirectURL(result.url);
       }
     }
 
@@ -135,10 +195,25 @@ class URLPurify {
 
     return rules;
   };
+
+  private fetchRedirectServices = async (
+    url: string,
+  ): Promise<SerializedServices> => {
+    const response = await fetch(url);
+    const servicesText = await response.text();
+    const services = JSON.parse(servicesText);
+
+    if (this.onFetchedRedirectServices) {
+      this.onFetchedRedirectServices(services);
+    }
+
+    return services;
+  };
 }
 
 export {
   URLPurify,
+  mappings,
   type URLPurifyConfig,
   type SerializedRules,
   type SerializedProvider,
