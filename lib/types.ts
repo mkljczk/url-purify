@@ -13,4 +13,21 @@ interface SerializedProvider {
   forceRedirection?: boolean;
 }
 
-export type { SerializedRules, SerializedProvider };
+type SerializedServices = Array<SerializedService>;
+
+interface SerializedService {
+  type: string;
+  test_url: string;
+  fallback: string;
+  instances: string[];
+}
+
+type InstancePickMode = "random" | "first";
+
+export type {
+  SerializedRules,
+  SerializedProvider,
+  SerializedServices,
+  SerializedService,
+  InstancePickMode,
+};
