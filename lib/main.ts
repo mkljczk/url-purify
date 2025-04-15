@@ -1,7 +1,6 @@
 import { Provider } from "./provider";
 import { mappings } from "./redirect-mappings";
 import { RedirectProvider } from "./redirect-provider";
-import { services } from "./redirect-services";
 import { sha256 } from "./tools";
 import type {
   InstancePickMode,
@@ -51,7 +50,7 @@ class URLPurify {
     onFetchedRedirectServices,
     referralMarketing = true,
     redirectServicesUrl,
-    redirectServicesFromMemory = services,
+    redirectServicesFromMemory,
     instancePickMode = 'first',
   }: URLPurifyConfig) {
     if (!ruleUrl && !rulesFromMemory && !redirectServicesUrl && !redirectServicesFromMemory)
@@ -114,18 +113,16 @@ class URLPurify {
         this.instancePickMode,
       );
     });
-
-    for (const service of services) {
-      this.redirectProviders[service.type];
-    }
   };
 
   /**
    * Clears tracking elements from a URL.
    * @param url - The URL to clear tracking elements from.
+   * @param removeFields - Whether to remove tracking fields from the URL.
+   * @param redirect - Whether to redirect to one of available proxy services.
    * @returns URL without tracking elements.
    */
-  clearUrl = (url: string) => {
+  clearUrl = (url: string, removeFields = true, redirect = true) => {
     let result: ReturnType<
       InstanceType<typeof Provider>["removeFieldsFormURL"]
     > = {
@@ -133,25 +130,29 @@ class URLPurify {
       redirect: false,
     };
 
-    /*
-     * Call the removeFieldsFormURL method for every provider.
-     */
-    for (const provider of Object.values(this.providers)) {
-      if (provider.matchURL(result.url)) {
-        result = provider.removeFieldsFormURL(result.url);
-      }
-
+    if (removeFields) {
       /*
-       * Ensure that the function doesn't get into a loop.
+       * Call the removeFieldsFormURL method for every provider.
        */
-      if (result.redirect) {
-        return result.url;
+      for (const provider of Object.values(this.providers)) {
+        if (provider.matchURL(result.url)) {
+          result = provider.removeFieldsFormURL(result.url);
+        }
+
+        /*
+         * Ensure that the function doesn't get into a loop.
+         */
+        if (result.redirect) {
+          return result.url;
+        }
       }
     }
 
-    for (const provider of Object.values(this.redirectProviders)) {
-      if (provider.matchURL(result.url)) {
-        result = provider.redirectURL(result.url);
+    if (redirect) {
+      for (const provider of Object.values(this.redirectProviders)) {
+        if (provider.matchURL(result.url)) {
+          result = provider.redirectURL(result.url);
+        }
       }
     }
 
@@ -175,6 +176,14 @@ class URLPurify {
     */
   setUrls = (ruleUrl: string, _hashUrl?: string) => {
     this.fetchRules(ruleUrl).then(this.createProviders);
+  };
+
+  /**
+  * Sets redirect services provided by the user.
+  * @param redirectServices - The list of redirect services.
+  */
+  setRedirectServices = (redirectServices: SerializedServices) => {
+    this.createRedirectProviders(redirectServices);
   };
 
   private fetchHash = async (url: string) => {
@@ -214,7 +223,8 @@ class URLPurify {
 export {
   URLPurify,
   mappings,
-  type URLPurifyConfig,
-  type SerializedRules,
   type SerializedProvider,
+  type SerializedRules,
+  type SerializedServices,
+  type URLPurifyConfig,
 };
