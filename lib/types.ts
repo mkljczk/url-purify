@@ -22,7 +22,7 @@ interface SerializedService {
   instances: string[];
 }
 
-type InstancePickMode = "random" | "first";
+type InstancePickMode = 'random' | 'first';
 
 export type {
   SerializedRules,

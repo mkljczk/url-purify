@@ -1,13 +1,13 @@
-import { Provider } from "./provider";
-import { mappings } from "./redirect-mappings";
-import { RedirectProvider } from "./redirect-provider";
-import { sha256 } from "./tools";
+import { Provider } from './provider';
+import { mappings } from './redirect-mappings';
+import { RedirectProvider } from './redirect-provider';
+import { sha256 } from './tools';
 import type {
   InstancePickMode,
   SerializedProvider,
   SerializedRules,
   SerializedServices,
-} from "./types";
+} from './types';
 
 interface URLPurifyConfig {
   /** URL for up-to-date URL cleaning rules */
@@ -53,9 +53,14 @@ class URLPurify {
     redirectServicesFromMemory,
     instancePickMode = 'first',
   }: URLPurifyConfig) {
-    if (!ruleUrl && !rulesFromMemory && !redirectServicesUrl && !redirectServicesFromMemory)
+    if (
+      !ruleUrl &&
+      !rulesFromMemory &&
+      !redirectServicesUrl &&
+      !redirectServicesFromMemory
+    )
       throw new Error(
-        "Either rule URL or a prefetched ruleset must be provided",
+        'Either rule URL or a prefetched ruleset must be provided',
       );
 
     this.referralMarketing = referralMarketing;
@@ -124,7 +129,7 @@ class URLPurify {
    */
   clearUrl = (url: string, removeFields = true, redirect = true) => {
     let result: ReturnType<
-      InstanceType<typeof Provider>["removeFieldsFormURL"]
+      InstanceType<typeof Provider>['removeFieldsFormURL']
     > = {
       url: url,
       redirect: false,
@@ -161,27 +166,27 @@ class URLPurify {
   };
 
   /**
-    * Sets rules provided by the user.
-    * @param rules - The rules object.
-    * @param _hash - The sha256 hash of the rules object (currently unused).
-    */
+   * Sets rules provided by the user.
+   * @param rules - The rules object.
+   * @param _hash - The sha256 hash of the rules object (currently unused).
+   */
   setRules = (rules: SerializedRules, _hash?: string) => {
     this.createProviders(rules);
   };
 
   /**
-    * Sets the URLs for rules database and hash source.
-    * @param ruleUrl - The URL for the rules database.
-    * @param _hashUrl - The URL for the hash source (currently unused).
-    */
+   * Sets the URLs for rules database and hash source.
+   * @param ruleUrl - The URL for the rules database.
+   * @param _hashUrl - The URL for the hash source (currently unused).
+   */
   setUrls = (ruleUrl: string, _hashUrl?: string) => {
     this.fetchRules(ruleUrl).then(this.createProviders);
   };
 
   /**
-  * Sets redirect services provided by the user.
-  * @param redirectServices - The list of redirect services.
-  */
+   * Sets redirect services provided by the user.
+   * @param redirectServices - The list of redirect services.
+   */
   setRedirectServices = (redirectServices: SerializedServices) => {
     this.createRedirectProviders(redirectServices);
   };

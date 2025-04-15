@@ -1,5 +1,5 @@
-import { mappings } from "./redirect-mappings";
-import { InstancePickMode, SerializedService } from "./types";
+import { mappings } from './redirect-mappings';
+import { InstancePickMode, SerializedService } from './types';
 
 class RedirectProvider {
   private urlPattern: RegExp;
@@ -9,9 +9,9 @@ class RedirectProvider {
   constructor(
     mapping: (typeof mappings)[0],
     mappedServices: Array<SerializedService>,
-    mode: InstancePickMode = "first",
+    mode: InstancePickMode = 'first',
   ) {
-    this.urlPattern = new RegExp(mapping.urlPattern, "i");
+    this.urlPattern = new RegExp(mapping.urlPattern, 'i');
     this.instances = mappedServices.map((service) => service.instances).flat();
     this.mode = mode;
   }
@@ -22,7 +22,7 @@ class RedirectProvider {
     const urlObject = new URL(url);
 
     const domain =
-      this.mode === "first"
+      this.mode === 'first'
         ? this.instances[0]
         : this.instances[Math.floor(Math.random() * this.instances.length)];
 
@@ -30,7 +30,7 @@ class RedirectProvider {
       return {
         url,
         changes: false,
-      }
+      };
     }
 
     const domainUrl = new URL(domain.split('|')[0]);
@@ -41,7 +41,7 @@ class RedirectProvider {
     return {
       url: urlObject.toString(),
       changes: true,
-    }
+    };
   };
 }
 
