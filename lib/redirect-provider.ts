@@ -1,48 +1,50 @@
-import { mappings } from './redirect-mappings';
-import { InstancePickMode, SerializedService } from './types';
+import type { RedirectMapping } from './redirect-mappings';
+import type { Cleaned, InstancePickMode, SerializedService } from './types';
 
 class RedirectProvider {
-  private urlPattern: RegExp;
-  private instances: Array<string>;
-  private mode: InstancePickMode;
+	private urlPattern: RegExp;
+	private instances: Array<string>;
+	private mode: InstancePickMode;
 
-  constructor(
-    mapping: (typeof mappings)[0],
-    mappedServices: Array<SerializedService>,
-    mode: InstancePickMode = 'first',
-  ) {
-    this.urlPattern = new RegExp(mapping.urlPattern, 'i');
-    this.instances = mappedServices.map((service) => service.instances).flat();
-    this.mode = mode;
-  }
+	constructor(
+		mapping: RedirectMapping,
+		mappedServices: Array<SerializedService>,
+		mode: InstancePickMode = 'first',
+	) {
+		this.urlPattern = new RegExp(mapping.urlPattern, 'i');
+		this.instances = mappedServices.flatMap((service) => service.instances);
+		this.mode = mode;
+	}
 
-  matchURL = (url: string) => this.urlPattern.test(url);
+	matchURL = (url: string) => this.urlPattern.test(url);
 
-  redirectURL = (url: string) => {
-    const urlObject = new URL(url);
+	redirectURL = (url: string): Cleaned => {
+		const urlObject = new URL(url);
 
-    const domain =
-      this.mode === 'first'
-        ? this.instances[0]
-        : this.instances[Math.floor(Math.random() * this.instances.length)];
+		const domain =
+			this.mode === 'first'
+				? this.instances[0]
+				: this.instances[Math.floor(Math.random() * this.instances.length)];
 
-    if (!domain) {
-      return {
-        url,
-        changes: false,
-      };
-    }
+		if (!domain) {
+			return {
+				url,
+				changes: 0,
+				redirect: false,
+			};
+		}
 
-    const domainUrl = new URL(domain.split('|')[0]);
+		const domainUrl = new URL(domain.split('|')[0]);
 
-    urlObject.host = domainUrl.host;
-    urlObject.protocol = domainUrl.protocol;
+		urlObject.host = domainUrl.host;
+		urlObject.protocol = domainUrl.protocol;
 
-    return {
-      url: urlObject.toString(),
-      changes: true,
-    };
-  };
+		return {
+			url: urlObject.toString(),
+			changes: 1,
+			redirect: true,
+		};
+	};
 }
 
 export { RedirectProvider };

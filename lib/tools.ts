@@ -29,40 +29,23 @@ const enc = new TextEncoder();
 const extractFragments = (url: URL) => new URLHashParams(url);
 
 /**
- * Returns the given URL without searchParams and hash.
- */
-const urlWithoutParamsAndHash = (url: URL) => {
-  let newURL = url.toString();
-
-  if (url.search) {
-    newURL = newURL.replace(url.search, '');
-  }
-
-  if (url.hash) {
-    newURL = newURL.replace(url.hash, '');
-  }
-
-  return new URL(newURL);
-};
-
-/**
  * Decodes an URL, also one that is encoded multiple times.
  *
  * @see https://stackoverflow.com/a/38265168
  */
 const decodeURL = (url: string) => {
-  let rtn = decodeURIComponent(url);
+	let rtn = decodeURIComponent(url);
 
-  while (isEncodedURI(rtn)) {
-    rtn = decodeURIComponent(rtn);
-  }
+	while (isEncodedURI(rtn)) {
+		rtn = decodeURIComponent(rtn);
+	}
 
-  // Required (e.g., to fix https://github.com/ClearURLs/Addon/issues/71)
-  if (!rtn.startsWith('http')) {
-    rtn = `http://${rtn}`;
-  }
+	// Required (e.g., to fix https://github.com/ClearURLs/Addon/issues/71)
+	if (!rtn.startsWith('http')) {
+		rtn = `http://${rtn}`;
+	}
 
-  return rtn;
+	return rtn;
 };
 
 /**
@@ -81,35 +64,11 @@ const isEncodedURI = (uri: string) => uri !== decodeURIComponent(uri || '');
  * @returns SHA-256 of the given message
  */
 const sha256 = async (message: string) => {
-  const msgUint8 = enc.encode(message);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
+	const msgUint8 = enc.encode(message);
+	const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+	const hashArray = Array.from(new Uint8Array(hashBuffer));
 
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+	return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 };
 
-/**
- * Returns an URLSearchParams as string.
- * Does handle spaces correctly.
- */
-const urlSearchParamsToString = (searchParams: URLSearchParams) => {
-  const rtn: Array<string> = [];
-
-  searchParams.forEach((value, key) => {
-    if (value) {
-      rtn.push(`${key}=${encodeURIComponent(value)}`);
-    } else {
-      rtn.push(key);
-    }
-  });
-
-  return rtn.join('&');
-};
-
-export {
-  extractFragments,
-  urlWithoutParamsAndHash,
-  decodeURL,
-  sha256,
-  urlSearchParamsToString,
-};
+export { decodeURL, extractFragments, sha256 };

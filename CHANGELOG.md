@@ -4,10 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Ongoing
-- Rewrite ClearURLs completely form scratch in typescript
-- Add features from the milestone [%1](https://gitlab.com/KevinRoebert/ClearUrls/-/milestones/1)
-- Dedicated documentation page like [docs.drasyl.org](https://docs.drasyl.org)
+# [4.1.0] Fix type definitions
+- feat: support YouTube query params
+
+# [4.0.0] Fix type definitions
+- BREAKING: remove embed parameter and compute YouTube URL by default
+- If normalized YouTube URL differs, increment changed count.
+
+# [3.0.1] Fix type definitions
+- Use tsgo for compilation
+
+# [3.0.0] YouTube parsing
+- BREAKING: embed field removed and replaced with optional embed_url
+- Added: optional embed_url and youtube_id fields
+- Refactored YouTube default URL to not be embed URL as YouTube no longer renders that in full window.
+- Fixed: Twitter detection regex. Unrelated URLs like https://example.com/?next=x.com now handled correctly.
+
+# [2.0.0] Initial Fork Release
 
 ## [1.XX.0] - 2022-XX-XX
 
@@ -32,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - [#1301](https://gitlab.com/ClearURLs/ClearUrls/-/issues/1301)
     - [#1302](https://gitlab.com/ClearURLs/ClearUrls/-/issues/1302)
     - [#1305](https://gitlab.com/ClearURLs/ClearUrls/-/issues/1305)
-    
+
 ### Compatibility note
 - Require Firefox >= 55
 - Require Chrome >= 37
@@ -79,7 +92,7 @@ Special thanks to [SunsetTechuila](https://github.com/SunsetTechuila) for provid
 - Require Chrome >= 37
 
 ### Changed
-- The popup window is now responsive 
+- The popup window is now responsive
 
 ## [1.25.0] - 2022-07-27
 
@@ -291,7 +304,7 @@ Special thanks to [SunsetTechuila](https://github.com/SunsetTechuila) for provid
 ### Changed
 - Updated all translation
 - Changed badged font color to #FFFFFF
-- Changed watchdog behavior as follows [#428](https://gitlab.com/KevinRoebert/ClearUrls/issues/428), [#431](https://gitlab.com/KevinRoebert/ClearUrls/issues/431), [#429](https://gitlab.com/KevinRoebert/ClearUrls/issues/429): 
+- Changed watchdog behavior as follows [#428](https://gitlab.com/KevinRoebert/ClearUrls/issues/428), [#431](https://gitlab.com/KevinRoebert/ClearUrls/issues/431), [#429](https://gitlab.com/KevinRoebert/ClearUrls/issues/429):
    - Increased watchdog interval to 60 seconds
    - Executed watchdog only if ClearURLs is also active
    - Watchdog restarts ClearURLs at most 3 times and only if ClearURLs has rules
@@ -507,7 +520,7 @@ Special thanks to [SunsetTechuila](https://github.com/SunsetTechuila) for provid
 - Require Chrome >= 22
 
 ### Changed
-- Only redirects, if request is of type main or sub frame to prevent security issues on automatically loaded ressource like images
+- Only redirects, if request is of type main or sub frame to prevent security issues on automatically loaded resource like images
 
 ### Fixed
 - Fixed [#253](https://gitlab.com/KevinRoebert/ClearUrls/issues/253)
@@ -786,7 +799,7 @@ Special thanks to [SunsetTechuila](https://github.com/SunsetTechuila) for provid
 
 ### Changed
 - Storage improvements, better performance
-- Splitted core file into multiple pieces for better overview
+- Split core file into multiple pieces for better overview
 - Minimize rules length
 
 ### Fixed
